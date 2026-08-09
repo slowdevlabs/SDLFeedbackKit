@@ -1,46 +1,57 @@
-# SDLFeedbackKit
+SDLFeedbackKit
 
-Lightweight backend-agnostic SwiftUI feedback package for iOS and macOS.
+Lightweight, backend-agnostic SwiftUI feedback package for iOS and macOS.
 
-SDLFeedbackKit is designed for self-hosted feedback backends. It provides the form UI, payload model, attachment pipeline, localization, and a transport contract. Your app owns presentation and your backend owns submission handling.
+SDLFeedbackKit provides the feedback form UI, payload model, attachment pipeline, localization, and a transport contract. Your app owns presentation, and your backend owns submission handling.
 
-## Status
+Status
 
-Early release / v0.1
+Early release / v0.1.0
 
-## Highlights
+Highlights
 
-- SwiftUI feedback form
-- Custom feedback categories
-- Message and optional email fields
-- Single image attachment
-- Automatic image optimization and metadata reduction
-- 1,000,000 byte default final attachment limit
-- Backend-independent `FeedbackTransport`
-- Native attachment pickers for iOS and macOS
-- EN / KO / ES localization
+SwiftUI feedback form
 
-## Requirements
+Custom feedback categories
 
-- Swift 5.9+
-- iOS 13.0+
-- macOS 10.15+
-- Swift Package Manager
-- No external dependencies
+Message and optional email fields
 
-## Installation
+Single image attachment
 
-Add the package in Xcode with the local repository URL:
+Automatic image optimization and metadata reduction
 
-```text
+1,000,000-byte default final attachment limit
+
+Backend-independent FeedbackTransport
+
+Native attachment pickers for iOS and macOS
+
+English, Korean, and Spanish localization
+
+No external dependencies
+
+Requirements
+
+Swift 5.9+
+
+iOS 13.0+
+
+macOS 10.15+
+
+Swift Package Manager
+
+Installation
+
+Add SDLFeedbackKit in Xcode using the package repository URL:
+
 https://github.com/slowdevlabs/SDLFeedbackKit
-```
 
-Or add the local checkout as a Swift Package dependency when working inside this repository.
+Select version 0.1.0 or later within the 0.1.x series.
 
-## Quick Start
+When working inside this repository, the example apps use the local package checkout.
 
-```swift
+Quick Start
+
 import SDLFeedbackKit
 import SwiftUI
 
@@ -68,105 +79,125 @@ struct SettingsView: View {
         }
     }
 }
-```
 
-## Custom Transport
+Custom Transport
 
-Implement `FeedbackTransport` in your app or backend module:
+Implement FeedbackTransport in your app or networking module:
 
-```swift
 struct MyFeedbackTransport: FeedbackTransport {
     func submit(_ payload: FeedbackPayload) async throws -> FeedbackSubmissionReceipt {
-        // Send payload to your own backend.
+        // Send the payload to your own backend.
         return FeedbackSubmissionReceipt(
             serverID: "feedback-123",
             acceptedAt: Date()
         )
     }
 }
-```
 
-## Presenting the Form
+SDLFeedbackKit does not include a hosted backend or a built-in network transport. The example apps use a mock transport and do not persist submitted feedback.
 
-`FeedbackFormView` does not own presentation. Host apps present it via sheet, window, or any other container they choose.
+Presenting the Form
 
-The recommended pattern is to close the host presentation from `onSubmitted` and `onCancelled`.
+FeedbackFormView does not own presentation. Host apps can present it using a sheet, window, or another container.
 
-## Configuration
+The recommended pattern is to close the host presentation from onSubmitted and onCancelled.
 
-`FeedbackConfiguration` currently supports:
+Configuration
 
-- categories
-- email field
-- attachment settings
-- message settings
-- cancel button visibility
+FeedbackConfiguration supports:
+
+categories
+
+email field settings
+
+attachment settings
+
+message settings
+
+cancel button visibility
 
 The default attachment policy is:
 
-- final optimized attachment limit: `1,000,000` bytes
-- long edge: `1,800` px
-- initial JPEG quality: `0.8`
+final optimized attachment limit: 1,000,000 bytes
 
-## Attachments
+long edge: 1,800 px
+
+initial JPEG quality: 0.8
+
+Attachments
 
 SDLFeedbackKit accepts a single image attachment and normalizes it before submission.
 
-- Images are resized and re-encoded by the package
-- Metadata is reduced during re-encoding
-- The default final output format is JPEG
-- `FeedbackAttachment` is the final optimized value passed through the transport boundary
+Images are resized and re-encoded by the package
 
-Supported input formats depend on the Apple platform decoder. JPEG and PNG are the common cases; HEIC/HEIF support depends on the host OS.
+Metadata is reduced during re-encoding
 
-## Localization
+The default final output format is JPEG
 
-The package ships `.strings` resources in:
+FeedbackAttachment is the final optimized value passed to FeedbackTransport
 
-- English
-- Korean
-- Spanish
+The default final attachment size is limited to 1,000,000 bytes
 
-Base language is English and the package uses `Bundle.module` for lookup.
+Supported input formats depend on the Apple platform decoder. JPEG and PNG are common cases; HEIC/HEIF support depends on the host OS.
 
-## Privacy and Security
+Localization
 
-- The package does not include a backend
-- Client-side data is untrusted and must be revalidated on the server
-- Do not embed secrets in the app binary
-- Selected images are re-encoded to reduce metadata and size
-- The package does not scan the photo library
+SDLFeedbackKit includes .strings resources for:
 
-See [docs/SECURITY.md](docs/SECURITY.md) for the full security model.
+English
 
-## Examples
+Korean
+
+Spanish
+
+English is the base language, and package localization is loaded through Bundle.module.
+
+Built-in category titles are localized by SDLFeedbackKit. Custom category titles are provided by the host app, so the host is responsible for localizing them when needed.
+
+Privacy and Security
+
+SDLFeedbackKit does not include a backend
+
+Client-side feedback data is untrusted and should be validated again by your backend
+
+Do not embed backend secrets in the app binary
+
+The package does not collect persistent device identifiers
+
+The package does not collect precise location
+
+Selected images are re-encoded to reduce metadata and size
+
+The package only processes the image selected by the user; it does not scan the photo library
+
+Your backend is responsible for authentication, rate limiting, abuse prevention, storage, and retention policies
+
+Examples
 
 Example host apps are included in:
 
-- `Examples/iOSExample`
-- `Examples/macOSExample`
+Examples/iOSExample
 
-They use a mock transport and demonstrate how to present `FeedbackFormView` from a host-owned sheet or window.
+Examples/macOSExample
 
-## What SDLFeedbackKit Does Not Provide
+They demonstrate host-owned presentation, FeedbackTransport integration, success/failure flows, and attachment handling using a mock transport.
 
-- No built-in backend
-- No network transport implementation
-- No multiple attachments
-- No camera capture
-- No drag and drop pipeline
-- No pasteboard attachment support
-- No custom theming system
+What SDLFeedbackKit Does Not Provide
 
-## Documentation
+No built-in backend
 
-- [docs/PROJECT_BRIEF.md](docs/PROJECT_BRIEF.md)
-- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
-- [docs/API_SPEC.md](docs/API_SPEC.md)
-- [docs/INTEGRATION_GUIDE.md](docs/INTEGRATION_GUIDE.md)
-- [docs/ATTACHMENT_SPEC.md](docs/ATTACHMENT_SPEC.md)
-- [docs/SECURITY.md](docs/SECURITY.md)
+No built-in network transport implementation
 
-## License
+No multiple attachments
 
-MIT. See [LICENSE](LICENSE).
+No camera capture
+
+No drag-and-drop attachment pipeline
+
+No pasteboard attachment support
+
+No custom theming system
+
+License
+
+MIT. See LICENSE.
