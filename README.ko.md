@@ -1,5 +1,8 @@
 # SDLFeedbackKit
 
+[English](README.md) · [한국어](README.ko.md) · [Español](README.es.md)
+
+
 **iOS와 macOS용 가볍고 백엔드에 종속되지 않는 SwiftUI 피드백 폼 패키지입니다.**
 
 ![Swift](https://img.shields.io/badge/Swift-5.9+-F05138)

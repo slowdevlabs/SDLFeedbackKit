@@ -1,5 +1,8 @@
 # SDLFeedbackKit
 
+[English](README.md) · [한국어](README.ko.md) · [Español](README.es.md)
+
+
 **Un formulario de comentarios ligero e independiente del backend para SwiftUI en iOS y macOS.**
 
 ![Swift](https://img.shields.io/badge/Swift-5.9+-F05138)
