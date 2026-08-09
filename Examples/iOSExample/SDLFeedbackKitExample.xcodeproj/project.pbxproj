@@ -1,0 +1,267 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		A1B2C3D4E5F6012345679101 /* SDLFeedbackKitExampleApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6012345679001 /* SDLFeedbackKitExampleApp.swift */; };
+		A1B2C3D4E5F6012345679102 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6012345679002 /* ContentView.swift */; };
+		A1B2C3D4E5F6012345679103 /* ExampleFeedbackTransport.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6012345679003 /* ExampleFeedbackTransport.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		A1B2C3D4E5F6012345679001 /* SDLFeedbackKitExampleApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SDLFeedbackKitExampleApp.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F6012345679002 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F6012345679003 /* ExampleFeedbackTransport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExampleFeedbackTransport.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F6012345679004 /* SDLFeedbackKitExample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SDLFeedbackKitExample.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A1B2C3D4E5F6012345679005 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		A1B2C3D4E5F6012345679006 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		A1B2C3D4E5F6012345679007 = {
+			isa = PBXGroup;
+			children = (
+				A1B2C3D4E5F6012345679008 /* SDLFeedbackKitExample */,
+				A1B2C3D4E5F6012345679009 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		A1B2C3D4E5F6012345679008 /* SDLFeedbackKitExample */ = {
+			isa = PBXGroup;
+			children = (
+				A1B2C3D4E5F6012345679001 /* SDLFeedbackKitExampleApp.swift */,
+				A1B2C3D4E5F6012345679002 /* ContentView.swift */,
+				A1B2C3D4E5F6012345679003 /* ExampleFeedbackTransport.swift */,
+				A1B2C3D4E5F6012345679005 /* Info.plist */,
+			);
+			path = SDLFeedbackKitExample;
+			sourceTree = "<group>";
+		};
+		A1B2C3D4E5F6012345679009 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				A1B2C3D4E5F6012345679004 /* SDLFeedbackKitExample.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		A1B2C3D4E5F6012345679010 /* SDLFeedbackKitExample */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A1B2C3D4E5F6012345679011 /* Build configuration list for PBXNativeTarget "SDLFeedbackKitExample" */;
+			buildPhases = (
+				A1B2C3D4E5F6012345679012 /* Sources */,
+				A1B2C3D4E5F6012345679006 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = SDLFeedbackKitExample;
+			packageProductDependencies = (
+				A1B2C3D4E5F6012345679021 /* SDLFeedbackKit */,
+			);
+			productName = SDLFeedbackKitExample;
+			productReference = A1B2C3D4E5F6012345679004 /* SDLFeedbackKitExample.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		A1B2C3D4E5F6012345679013 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1600;
+				LastUpgradeCheck = 1600;
+				TargetAttributes = {
+					A1B2C3D4E5F6012345679010 = {
+						CreatedOnToolsVersion = 16.0;
+					};
+				};
+			};
+			buildConfigurationList = A1B2C3D4E5F6012345679014 /* Build configuration list for PBXProject "SDLFeedbackKitExample" */;
+			compatibilityVersion = "Xcode 15.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = A1B2C3D4E5F6012345679007;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				A1B2C3D4E5F6012345679020 /* XCLocalSwiftPackageReference "../.." */,
+			);
+			preferredProjectObjectVersion = 56;
+			productRefGroup = A1B2C3D4E5F6012345679009 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				A1B2C3D4E5F6012345679010 /* SDLFeedbackKitExample */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		A1B2C3D4E5F6012345679015 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		A1B2C3D4E5F6012345679012 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A1B2C3D4E5F6012345679101 /* SDLFeedbackKitExampleApp.swift in Sources */,
+				A1B2C3D4E5F6012345679102 /* ContentView.swift in Sources */,
+				A1B2C3D4E5F6012345679103 /* ExampleFeedbackTransport.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		A1B2C3D4E5F6012345679016 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGNING_REQUIRED = NO;
+				CODE_SIGN_STYLE = Manual;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = SDLFeedbackKitExample/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.slowdevlabs.SDLFeedbackKitExample;
+				PRODUCT_NAME = SDLFeedbackKitExample;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		A1B2C3D4E5F6012345679017 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGNING_REQUIRED = NO;
+				CODE_SIGN_STYLE = Manual;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = SDLFeedbackKitExample/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.slowdevlabs.SDLFeedbackKitExample;
+				PRODUCT_NAME = SDLFeedbackKitExample;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_VERSION = 5.9;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		A1B2C3D4E5F6012345679018 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD)";
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGN_STYLE = Manual;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.slowdevlabs.SDLFeedbackKitExample;
+				PRODUCT_NAME = SDLFeedbackKitExample;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_VERSION = 5.9;
+			};
+			name = Debug;
+		};
+		A1B2C3D4E5F6012345679019 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD)";
+				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGN_STYLE = Manual;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				MARKETING_VERSION = 0.1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.slowdevlabs.SDLFeedbackKitExample;
+				PRODUCT_NAME = SDLFeedbackKitExample;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_VERSION = 5.9;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		A1B2C3D4E5F6012345679011 /* Build configuration list for PBXNativeTarget "SDLFeedbackKitExample" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A1B2C3D4E5F6012345679016 /* Debug */,
+				A1B2C3D4E5F6012345679017 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A1B2C3D4E5F6012345679014 /* Build configuration list for PBXProject "SDLFeedbackKitExample" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A1B2C3D4E5F6012345679018 /* Debug */,
+				A1B2C3D4E5F6012345679019 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		A1B2C3D4E5F6012345679020 /* XCLocalSwiftPackageReference "../.." */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../..;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		A1B2C3D4E5F6012345679021 /* SDLFeedbackKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A1B2C3D4E5F6012345679020 /* XCLocalSwiftPackageReference "../.." */;
+			productName = SDLFeedbackKit;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = A1B2C3D4E5F6012345679013 /* Project object */;
+}
