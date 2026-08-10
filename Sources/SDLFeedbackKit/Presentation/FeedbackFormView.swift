@@ -3,7 +3,7 @@ import SwiftUI
 
 /// A lightweight SwiftUI feedback form that owns its internal model lifecycle.
 public struct FeedbackFormView: View {
-    private let model: FeedbackFormModel
+    @State private var model: FeedbackFormModel
 
     private let configuration: FeedbackConfiguration
     private let onSubmitted: ((FeedbackSubmissionResult) -> Void)?
@@ -23,10 +23,12 @@ public struct FeedbackFormView: View {
         onSubmitted: ((FeedbackSubmissionResult) -> Void)? = nil,
         onCancelled: (() -> Void)? = nil
     ) {
-        model = FeedbackFormModel(
-            context: context,
-            configuration: configuration,
-            transport: transport
+        _model = State(
+            wrappedValue: FeedbackFormModel(
+                context: context,
+                configuration: configuration,
+                transport: transport
+            )
         )
         self.configuration = configuration
         self.onSubmitted = onSubmitted
@@ -137,17 +139,17 @@ private struct FeedbackFormContentView: View {
         }
         .sheet(isPresented: $isAttachmentPickerPresented) {
             AttachmentPickerHost { outcome in
-                isAttachmentPickerPresented = false
+                Task { @MainActor in
+                    isAttachmentPickerPresented = false
 
-                switch outcome {
-                case let .selected(data):
-                    Task { @MainActor in
+                    switch outcome {
+                    case let .selected(data):
                         await model.processAttachment(data: data)
+                    case let .failed(error):
+                        model.reportAttachmentFailure(error)
+                    case .cancelled:
+                        break
                     }
-                case let .failed(error):
-                    model.reportAttachmentFailure(error)
-                case .cancelled:
-                    break
                 }
             }
         }

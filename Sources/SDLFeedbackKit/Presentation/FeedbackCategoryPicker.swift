@@ -27,10 +27,12 @@ struct FeedbackCategoryPicker: View {
                         }
                         .padding(.vertical, 10)
                         .padding(.horizontal, 12)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                         .background(
                             RoundedRectangle(cornerRadius: 10)
                                 .fill(selection?.id == category.id ? Color.accentColor.opacity(0.12) : Color.clear)
                         )
+                        .contentShape(Rectangle())
                     }
                     .buttonStyle(PlainButtonStyle())
                 }

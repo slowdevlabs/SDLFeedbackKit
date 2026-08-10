@@ -57,7 +57,6 @@ struct PlatformAttachmentPickerView: UIViewControllerRepresentable {
                     self.complete(outcome)
                 }
             }
-            picker.dismiss(animated: true)
         }
 
         func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
