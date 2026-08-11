@@ -4,16 +4,18 @@ import SwiftUI
 struct FeedbackMessageEditor: View {
     @Binding var text: String
     let placeholder: String
+    @Environment(\.locale) private var locale
+    @Environment(\.sizeCategory) private var sizeCategory
 
     private let minimumHeight: CGFloat = 140
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text(SDLFeedbackStrings.messageTitle)
+            Text(SDLFeedbackLocalizedStrings.messageTitle(locale: locale))
                 .font(.headline)
 
             ZStack(alignment: .topLeading) {
-                MultilineTextView(text: $text)
+                MultilineTextView(text: $text, sizeCategory: sizeCategory)
                     .frame(minHeight: minimumHeight)
                     .padding(10)
                     .background(
@@ -27,6 +29,7 @@ struct FeedbackMessageEditor: View {
 
                 if text.isEmpty {
                     Text(placeholder)
+                        .font(.body)
                         .foregroundColor(.secondary)
                         .padding(.horizontal, 16)
                         .padding(.vertical, 18)
@@ -39,9 +42,10 @@ struct FeedbackMessageEditor: View {
 
 private struct MultilineTextView: View {
     @Binding var text: String
+    let sizeCategory: ContentSizeCategory
 
     var body: some View {
-        PlatformMultilineTextView(text: $text)
+        PlatformMultilineTextView(text: $text, sizeCategory: sizeCategory)
     }
 }
 
@@ -50,6 +54,7 @@ import UIKit
 
 private struct PlatformMultilineTextView: UIViewRepresentable {
     @Binding var text: String
+    let sizeCategory: ContentSizeCategory
 
     func makeCoordinator() -> Coordinator {
         Coordinator(text: $text)
@@ -58,7 +63,8 @@ private struct PlatformMultilineTextView: UIViewRepresentable {
     func makeUIView(context: Context) -> UITextView {
         let textView = UITextView()
         textView.backgroundColor = .clear
-        textView.font = UIFont.preferredFont(forTextStyle: .body)
+        textView.font = bodyFont(for: sizeCategory)
+        textView.adjustsFontForContentSizeCategory = true
         textView.textColor = UIColor.label
         textView.delegate = context.coordinator
         textView.isScrollEnabled = true
@@ -69,6 +75,7 @@ private struct PlatformMultilineTextView: UIViewRepresentable {
     }
 
     func updateUIView(_ uiView: UITextView, context: Context) {
+        uiView.font = bodyFont(for: sizeCategory)
         if uiView.text != text {
             uiView.text = text
         }
@@ -85,12 +92,18 @@ private struct PlatformMultilineTextView: UIViewRepresentable {
             text.wrappedValue = textView.text
         }
     }
+
+    private func bodyFont(for sizeCategory: ContentSizeCategory) -> UIFont {
+        let traitCollection = UITraitCollection(preferredContentSizeCategory: sizeCategory.uiContentSizeCategory)
+        return UIFont.preferredFont(forTextStyle: .body, compatibleWith: traitCollection)
+    }
 }
 #elseif os(macOS)
 import AppKit
 
 private struct PlatformMultilineTextView: NSViewRepresentable {
     @Binding var text: String
+    let sizeCategory: ContentSizeCategory
 
     func makeCoordinator() -> Coordinator {
         Coordinator(text: $text)
@@ -147,4 +160,40 @@ private struct PlatformMultilineTextView: NSViewRepresentable {
     }
 }
 #endif
+
+#if os(iOS)
+private extension ContentSizeCategory {
+    var uiContentSizeCategory: UIContentSizeCategory {
+        switch self {
+        case .extraSmall:
+            return .extraSmall
+        case .small:
+            return .small
+        case .medium:
+            return .medium
+        case .large:
+            return .large
+        case .extraLarge:
+            return .extraLarge
+        case .extraExtraLarge:
+            return .extraExtraLarge
+        case .extraExtraExtraLarge:
+            return .extraExtraExtraLarge
+        case .accessibilityMedium:
+            return .accessibilityMedium
+        case .accessibilityLarge:
+            return .accessibilityLarge
+        case .accessibilityExtraLarge:
+            return .accessibilityExtraLarge
+        case .accessibilityExtraExtraLarge:
+            return .accessibilityExtraExtraLarge
+        case .accessibilityExtraExtraExtraLarge:
+            return .accessibilityExtraExtraExtraLarge
+        @unknown default:
+            return .large
+        }
+    }
+}
+#endif
+
 #endif

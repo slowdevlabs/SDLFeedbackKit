@@ -26,9 +26,16 @@ enum SDLFeedbackStrings {
     static var attachmentRemove: String { localized("feedback.attachment.remove") }
     static var attachmentPreparing: String { localized("feedback.attachment.preparing") }
     static var attachmentFailed: String { localized("feedback.attachment.failed") }
+    static var attachmentLoadFailed: String { localized("feedback.attachment.load_failed") }
     static var attachmentTooLarge: String { localized("feedback.attachment.too_large") }
     static var attachmentTitle: String { localized("feedback.attachment.title") }
     static var attachmentNone: String { localized("feedback.attachment.none") }
+
+    static var privacyPolicyLabel: String { localized("feedback.privacy.policy") }
+
+    static func privacyDisclosureBody(appName: String) -> String {
+        String.localizedStringWithFormat(localized("feedback.privacy.disclosure.body"), appName)
+    }
 
     static var submit: String { localized("feedback.submit") }
     static var submitting: String { localized("feedback.submitting") }

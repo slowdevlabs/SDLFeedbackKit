@@ -7,6 +7,7 @@ struct FeedbackAttachmentSection: View {
     let isInteractionDisabled: Bool
     let onPrimaryAction: () -> Void
     let onRemove: () -> Void
+    @Environment(\.locale) private var locale
 
     private var byteCountFormatter: ByteCountFormatter {
         let formatter = ByteCountFormatter()
@@ -16,50 +17,75 @@ struct FeedbackAttachmentSection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text(SDLFeedbackStrings.attachmentTitle)
-                .font(.headline)
+            HStack(spacing: 0) {
+                Text(SDLFeedbackLocalizedStrings.attachmentTitle(locale: locale))
+                    .fixedSize(horizontal: false, vertical: true)
+                Text(" (")
+                    .font(.headline)
+                    .fontWeight(.regular)
+                    .foregroundColor(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                Text(SDLFeedbackLocalizedStrings.optional(locale: locale))
+                    .font(.headline)
+                    .fontWeight(.regular)
+                    .foregroundColor(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                Text(")")
+                    .font(.headline)
+                    .fontWeight(.regular)
+                    .foregroundColor(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .font(.headline)
+            .accessibilityElement(children: .combine)
 
-            switch state {
-            case .processingAttachment:
+            if let processingMessage = FeedbackAttachmentPresentation.processingMessage(for: state, locale: locale) {
                 HStack(spacing: 10) {
                     FeedbackActivityIndicator()
-                    Text(SDLFeedbackStrings.attachmentPreparing)
+                    Text(processingMessage)
                         .foregroundColor(.secondary)
                 }
-            default:
-                if let attachment {
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text(attachment.filename)
-                            .font(.body)
-                            .fixedSize(horizontal: false, vertical: true)
-                        Text(byteCountFormatter.string(fromByteCount: Int64(attachment.byteCount)))
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                            .fixedSize(horizontal: false, vertical: true)
+            }
 
-                        HStack(spacing: 12) {
-                            Button(SDLFeedbackStrings.attachmentReplace) {
-                                onPrimaryAction()
-                            }
-                            .disabled(isInteractionDisabled)
+            if let errorMessage = FeedbackAttachmentPresentation.attachmentErrorMessage(for: state, locale: locale) {
+                Text(errorMessage)
+                    .font(.subheadline)
+                    .foregroundColor(.red)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
 
-                            Button(SDLFeedbackStrings.attachmentRemove) {
-                                onRemove()
-                            }
-                            .disabled(isInteractionDisabled)
-                        }
-                    }
-                } else {
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text(SDLFeedbackStrings.attachmentNone)
-                            .foregroundColor(.secondary)
-                            .fixedSize(horizontal: false, vertical: true)
+            if let attachment {
+                VStack(alignment: .leading, spacing: 10) {
+                    Text(attachment.filename)
+                        .font(.body)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Text(byteCountFormatter.string(fromByteCount: Int64(attachment.byteCount)))
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
 
-                        Button(SDLFeedbackStrings.attachmentAdd) {
+                    HStack(spacing: 12) {
+                        Button(SDLFeedbackLocalizedStrings.attachmentReplace(locale: locale)) {
                             onPrimaryAction()
                         }
                         .disabled(isInteractionDisabled)
+
+                        Button(SDLFeedbackLocalizedStrings.attachmentRemove(locale: locale)) {
+                            onRemove()
+                        }
+                        .disabled(isInteractionDisabled)
                     }
+                }
+            } else {
+                VStack(alignment: .leading, spacing: 10) {
+                    Text(SDLFeedbackLocalizedStrings.attachmentNone(locale: locale))
+                        .foregroundColor(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                    Button(SDLFeedbackLocalizedStrings.attachmentAdd(locale: locale)) {
+                        onPrimaryAction()
+                    }
+                    .disabled(isInteractionDisabled)
                 }
             }
         }

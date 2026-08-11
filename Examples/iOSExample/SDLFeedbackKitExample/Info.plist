@@ -23,8 +23,10 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Select a screenshot or image to send feedback about the app.</string>
-	<key>UILaunchScreen</key>
-	<dict/>
-</dict>
+		<string>Select a screenshot or image to send feedback about the app.</string>
+		<key>UIRequiresFullScreen</key>
+		<true/>
+		<key>UILaunchScreen</key>
+		<dict/>
+	</dict>
 </plist>

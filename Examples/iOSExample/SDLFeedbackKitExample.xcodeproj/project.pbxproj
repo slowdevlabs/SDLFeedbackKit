@@ -1,10 +1,13 @@
 // !$*UTF8*$!
 {
 	archiveVersion = 1;
-	objectVersion = 56;
+	classes = {
+	};
+	objectVersion = 63;
 	objects = {
 
 /* Begin PBXBuildFile section */
+		2A08BFCD302A0B4100F67588 /* SDLFeedbackKit in Frameworks */ = {isa = PBXBuildFile; productRef = 2A08BFCC302A0B4100F67588 /* SDLFeedbackKit */; };
 		A1B2C3D4E5F6012345679101 /* SDLFeedbackKitExampleApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6012345679001 /* SDLFeedbackKitExampleApp.swift */; };
 		A1B2C3D4E5F6012345679102 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6012345679002 /* ContentView.swift */; };
 		A1B2C3D4E5F6012345679103 /* ExampleFeedbackTransport.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6012345679003 /* ExampleFeedbackTransport.swift */; };
@@ -23,6 +26,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2A08BFCD302A0B4100F67588 /* SDLFeedbackKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -72,7 +76,7 @@
 			);
 			name = SDLFeedbackKitExample;
 			packageProductDependencies = (
-				A1B2C3D4E5F6012345679021 /* SDLFeedbackKit */,
+				2A08BFCC302A0B4100F67588 /* SDLFeedbackKit */,
 			);
 			productName = SDLFeedbackKitExample;
 			productReference = A1B2C3D4E5F6012345679004 /* SDLFeedbackKitExample.app */;
@@ -104,9 +108,8 @@
 			mainGroup = A1B2C3D4E5F6012345679007;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				A1B2C3D4E5F6012345679020 /* XCLocalSwiftPackageReference "../.." */,
+				2A08BFCB302A0B4100F67588 /* XCLocalSwiftPackageReference "../../../SDLFeedbackKit" */,
 			);
-			preferredProjectObjectVersion = 56;
 			productRefGroup = A1B2C3D4E5F6012345679009 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -115,16 +118,6 @@
 			);
 		};
 /* End PBXProject section */
-
-/* Begin PBXResourcesBuildPhase section */
-		A1B2C3D4E5F6012345679015 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		A1B2C3D4E5F6012345679012 /* Sources */ = {
@@ -146,19 +139,25 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
-				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGNING_ALLOWED = YES;
 				CODE_SIGNING_REQUIRED = NO;
-				CODE_SIGN_STYLE = Manual;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = U2LNNGUXAW;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = SDLFeedbackKitExample/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
 				MARKETING_VERSION = 0.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.slowdevlabs.SDLFeedbackKitExample;
 				PRODUCT_NAME = SDLFeedbackKitExample;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_VERSION = 5.9;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -169,18 +168,23 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ENABLE_OBJC_ARC = YES;
-				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGNING_ALLOWED = YES;
 				CODE_SIGNING_REQUIRED = NO;
-				CODE_SIGN_STYLE = Manual;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = U2LNNGUXAW;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = SDLFeedbackKitExample/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
 				MARKETING_VERSION = 0.1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.slowdevlabs.SDLFeedbackKitExample;
 				PRODUCT_NAME = SDLFeedbackKitExample;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SWIFT_VERSION = 5.9;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -202,6 +206,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.slowdevlabs.SDLFeedbackKitExample;
 				PRODUCT_NAME = SDLFeedbackKitExample;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_VERSION = 5.9;
 			};
 			name = Debug;
@@ -249,16 +254,15 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
-		A1B2C3D4E5F6012345679020 /* XCLocalSwiftPackageReference "../.." */ = {
+		2A08BFCB302A0B4100F67588 /* XCLocalSwiftPackageReference "../../../SDLFeedbackKit" */ = {
 			isa = XCLocalSwiftPackageReference;
-			relativePath = ../..;
+			relativePath = ../../../SDLFeedbackKit;
 		};
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		A1B2C3D4E5F6012345679021 /* SDLFeedbackKit */ = {
+		2A08BFCC302A0B4100F67588 /* SDLFeedbackKit */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = A1B2C3D4E5F6012345679020 /* XCLocalSwiftPackageReference "../.." */;
 			productName = SDLFeedbackKit;
 		};
 /* End XCSwiftPackageProductDependency section */

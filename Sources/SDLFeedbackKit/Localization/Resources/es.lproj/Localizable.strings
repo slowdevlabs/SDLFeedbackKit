@@ -4,8 +4,10 @@
 "feedback.category.bug" = "Informe de error";
 "feedback.category.feature_request" = "Solicitud de función";
 "feedback.category.other" = "Otro";
+"feedback.category.collapsed" = "Colapsado";
+"feedback.category.expanded" = "Expandido";
 "feedback.message.title" = "Mensaje";
-"feedback.message.placeholder" = "Describe lo que ocurrió...";
+"feedback.message.placeholder" = "Cuéntanos tu opinión o describe el problema con detalle.";
 "feedback.email.title" = "Correo electrónico";
 "feedback.email.optional" = "Opcional";
 "feedback.attachment.add" = "Añadir imagen";
@@ -13,9 +15,12 @@
 "feedback.attachment.remove" = "Eliminar imagen";
 "feedback.attachment.preparing" = "Preparando imagen...";
 "feedback.attachment.failed" = "No se pudo adjuntar la imagen";
+"feedback.attachment.load_failed" = "No se pudo cargar esta foto. Elige otra foto.";
 "feedback.attachment.too_large" = "La imagen es demasiado grande";
 "feedback.attachment.title" = "Adjunto";
 "feedback.attachment.none" = "No hay imagen adjunta";
+"feedback.privacy.disclosure.body" = "Los comentarios enviados a %@ pueden incluir tu mensaje, correo electrónico opcional y una imagen adjunta.";
+"feedback.privacy.policy" = "Política de privacidad";
 "feedback.submit" = "Enviar";
 "feedback.submitting" = "Enviando...";
 "feedback.success.title" = "Gracias";
@@ -23,5 +28,5 @@
 "feedback.error.title" = "Algo salió mal";
 "feedback.error.generic" = "No se pudieron enviar los comentarios.";
 "feedback.error.retry" = "Intentar de nuevo";
-"feedback.error.invalid_email" = "Introduce una dirección de correo válida.";
+"feedback.error.invalid_email" = "Introduce una dirección de correo electrónico válida.";
 "feedback.cancel" = "Cancelar";

@@ -4,8 +4,10 @@
 "feedback.category.bug" = "버그 신고";
 "feedback.category.feature_request" = "기능 제안";
 "feedback.category.other" = "기타";
+"feedback.category.collapsed" = "접힘";
+"feedback.category.expanded" = "펼쳐짐";
 "feedback.message.title" = "내용";
-"feedback.message.placeholder" = "무엇이 있었는지 자세히 적어주세요...";
+"feedback.message.placeholder" = "의견이나 문제 상황을 자세히 적어주세요.";
 "feedback.email.title" = "이메일";
 "feedback.email.optional" = "선택";
 "feedback.attachment.add" = "이미지 추가";
@@ -13,9 +15,12 @@
 "feedback.attachment.remove" = "이미지 제거";
 "feedback.attachment.preparing" = "이미지 준비 중...";
 "feedback.attachment.failed" = "이미지를 첨부할 수 없습니다";
+"feedback.attachment.load_failed" = "이 사진을 불러올 수 없습니다. 다른 사진을 선택해 주세요.";
 "feedback.attachment.too_large" = "이미지 크기가 너무 큽니다";
 "feedback.attachment.title" = "첨부";
 "feedback.attachment.none" = "첨부된 이미지가 없습니다";
+"feedback.privacy.disclosure.body" = "%@에 보내는 피드백에는 입력한 내용, 선택적 이메일 및 첨부 이미지가 포함될 수 있습니다.";
+"feedback.privacy.policy" = "개인정보 처리방침";
 "feedback.submit" = "보내기";
 "feedback.submitting" = "보내는 중...";
 "feedback.success.title" = "감사합니다";
@@ -23,5 +28,5 @@
 "feedback.error.title" = "문제가 발생했습니다";
 "feedback.error.generic" = "의견을 보낼 수 없습니다.";
 "feedback.error.retry" = "다시 시도";
-"feedback.error.invalid_email" = "유효한 이메일 주소를 입력해 주세요.";
+"feedback.error.invalid_email" = "올바른 이메일 주소를 입력해 주세요.";
 "feedback.cancel" = "취소";

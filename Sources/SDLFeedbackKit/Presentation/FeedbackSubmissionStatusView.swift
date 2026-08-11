@@ -4,6 +4,7 @@ import SwiftUI
 struct FeedbackSubmissionStatusView: View {
     let state: FeedbackFormState
     let onRetry: () -> Void
+    @Environment(\.locale) private var locale
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -11,36 +12,36 @@ struct FeedbackSubmissionStatusView: View {
             case .idle:
                 EmptyView()
             case .processingAttachment:
-                statusRow(
-                    icon: nil,
-                    title: SDLFeedbackStrings.attachmentPreparing,
-                    detail: nil
-                )
+                EmptyView()
             case .submitting:
                 statusRow(
                     icon: nil,
-                    title: SDLFeedbackStrings.submitting,
+                    title: SDLFeedbackLocalizedStrings.submitting(locale: locale),
                     detail: nil
                 )
             case .success:
                 statusRow(
                     icon: "✓",
-                    title: SDLFeedbackStrings.successTitle,
-                    detail: SDLFeedbackStrings.successMessage,
+                    title: SDLFeedbackLocalizedStrings.successTitle(locale: locale),
+                    detail: SDLFeedbackLocalizedStrings.successMessage(locale: locale),
                     color: .green
                 )
             case .failure(.cancelled):
                 EmptyView()
             case let .failure(error):
-                statusRow(
-                    icon: "!",
-                    title: SDLFeedbackStrings.errorTitle,
-                    detail: localizedMessage(for: error),
-                    color: .red
-                )
-                if error == .submissionFailed {
-                    Button(SDLFeedbackStrings.errorRetry) {
-                        onRetry()
+                if FeedbackAttachmentPresentation.shouldSuppressGlobalFailure(for: error) {
+                    EmptyView()
+                } else {
+                    statusRow(
+                        icon: "!",
+                        title: SDLFeedbackLocalizedStrings.errorTitle(locale: locale),
+                        detail: localizedMessage(for: error, locale: locale),
+                        color: .red
+                    )
+                    if error == .submissionFailed {
+                        Button(SDLFeedbackLocalizedStrings.errorRetry(locale: locale)) {
+                            onRetry()
+                        }
                     }
                 }
             }
@@ -77,20 +78,22 @@ struct FeedbackSubmissionStatusView: View {
         }
     }
 
-    private func localizedMessage(for error: FeedbackError) -> String {
+    private func localizedMessage(for error: FeedbackError, locale: Locale) -> String {
         switch error {
         case .invalidInput:
-            return SDLFeedbackStrings.errorGeneric
+            return SDLFeedbackLocalizedStrings.errorGeneric(locale: locale)
         case .invalidEmail:
-            return SDLFeedbackStrings.errorInvalidEmail
+            return SDLFeedbackLocalizedStrings.errorInvalidEmail(locale: locale)
         case .attachmentTooLarge:
-            return SDLFeedbackStrings.attachmentTooLarge
-        case .unsupportedAttachment, .attachmentProcessingFailed:
-            return SDLFeedbackStrings.attachmentFailed
+            return SDLFeedbackLocalizedStrings.attachmentTooLarge(locale: locale)
+        case .unsupportedAttachment:
+            return SDLFeedbackLocalizedStrings.attachmentFailed(locale: locale)
+        case .attachmentProcessingFailed:
+            return SDLFeedbackLocalizedStrings.attachmentLoadFailed(locale: locale)
         case .submissionFailed:
-            return SDLFeedbackStrings.errorGeneric
+            return SDLFeedbackLocalizedStrings.errorGeneric(locale: locale)
         case .cancelled:
-            return ""
+            return SDLFeedbackLocalizedStrings.errorGeneric(locale: locale)
         }
     }
 }

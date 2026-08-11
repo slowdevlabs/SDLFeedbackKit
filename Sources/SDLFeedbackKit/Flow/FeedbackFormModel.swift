@@ -20,9 +20,12 @@ final class FeedbackFormModel: ObservableObject {
     @Published var email: String {
         didSet {
             guard oldValue != email else { return }
+            updateEmailValidationState()
             handleDraftMutation()
         }
     }
+
+    @Published private(set) var emailValidationError: FeedbackError?
 
     @Published private(set) var attachment: FeedbackAttachment?
     @Published private(set) var state: FeedbackFormState
@@ -34,8 +37,12 @@ final class FeedbackFormModel: ObservableObject {
     private let imageOptimizer: any ImageOptimizer
     private let uuidProvider: () -> UUID
     private let dateProvider: () -> Date
+    private let attachmentProviderTimeoutNanoseconds: UInt64
 
     private var pendingSubmission: PendingSubmissionIdentity?
+    private var currentAttachmentSelectionID: UUID?
+    private var pendingAttachmentTimeoutTask: Task<Void, Never>?
+    private var isAttachmentOptimizationInFlight = false
 
     init(
         context: FeedbackContext,
@@ -44,7 +51,8 @@ final class FeedbackFormModel: ObservableObject {
         payloadBuilder: FeedbackPayloadBuilder = FeedbackPayloadBuilder(),
         imageOptimizer: any ImageOptimizer = DefaultImageOptimizer(),
         uuidProvider: @escaping () -> UUID = UUID.init,
-        dateProvider: @escaping () -> Date = Date.init
+        dateProvider: @escaping () -> Date = Date.init,
+        attachmentProviderTimeoutNanoseconds: UInt64 = 5_000_000_000
     ) {
         self.context = context
         self.configuration = configuration
@@ -53,11 +61,17 @@ final class FeedbackFormModel: ObservableObject {
         self.imageOptimizer = imageOptimizer
         self.uuidProvider = uuidProvider
         self.dateProvider = dateProvider
+        self.attachmentProviderTimeoutNanoseconds = attachmentProviderTimeoutNanoseconds
         self.selectedCategory = configuration.categories.first
         self.message = ""
         self.email = ""
+        self.emailValidationError = nil
         self.attachment = nil
         self.state = .idle
+    }
+
+    deinit {
+        pendingAttachmentTimeoutTask?.cancel()
     }
 
     var isSubmitting: Bool {
@@ -75,13 +89,59 @@ final class FeedbackFormModel: ObservableObject {
     }
 
     var canSubmit: Bool {
-        !isSubmitting && !isProcessingAttachment
+        !isSubmitting && !isProcessingAttachment && emailValidationError == nil
+    }
+
+    func beginAttachmentSelection() -> UUID {
+        cancelPendingAttachmentTimeout()
+        let selectionID = UUID()
+        currentAttachmentSelectionID = selectionID
+        AttachmentPickerDebugLog.log("attachment.selection.begin id=\(selectionID.uuidString)")
+        return selectionID
+    }
+
+    func beginAttachmentAcquisition(selectionID: UUID) {
+        guard isCurrentAttachmentSelection(selectionID) else {
+            AttachmentPickerDebugLog.log("provider.request.timeoutScheduled.dropped.stale id=\(selectionID.uuidString) current=\(currentAttachmentSelectionID?.uuidString ?? "nil")")
+            return
+        }
+
+        cancelPendingAttachmentTimeout()
+        state = .processingAttachment
+        AttachmentPickerDebugLog.log("provider.request.timeoutScheduled id=\(selectionID.uuidString)")
+        pendingAttachmentTimeoutTask = Task { [attachmentProviderTimeoutNanoseconds, weak self] in
+            do {
+                try await Task.sleep(nanoseconds: attachmentProviderTimeoutNanoseconds)
+            } catch {
+                return
+            }
+            if let self {
+                self.handleAttachmentTimeoutIfCurrent(selectionID: selectionID)
+            }
+        }
+    }
+
+    func markAttachmentProviderResponse(selectionID: UUID) {
+        guard isCurrentAttachmentSelection(selectionID) else {
+            AttachmentPickerDebugLog.log("provider.callback.drop.stale id=\(selectionID.uuidString) current=\(currentAttachmentSelectionID?.uuidString ?? "nil")")
+            return
+        }
+
+        cancelPendingAttachmentTimeout()
     }
 
     func submit() async {
         guard !isProcessingAttachment else { return }
         guard !isSubmitting else { return }
         if case .success = state {
+            return
+        }
+
+        if let validationError = FeedbackEmailValidation.validationError(
+            for: email,
+            configuration: configuration.emailField
+        ) {
+            emailValidationError = validationError
             return
         }
 
@@ -151,34 +211,27 @@ final class FeedbackFormModel: ObservableObject {
     }
 
     func processAttachment(data: Data) async {
-        guard !isProcessingAttachment, !isSubmitting else {
-            return
-        }
+        await processAttachment(data: data, selectionID: nil)
+    }
 
-        state = .processingAttachment
+    func processAttachment(data: Data, selectionID: UUID) async {
+        await processAttachment(data: data, selectionID: Optional(selectionID))
+    }
 
-        do {
-            let optimizedAttachment = try await imageOptimizer.optimize(
-                data: data,
-                configuration: configuration.attachment
-            )
-            attachment = optimizedAttachment
-            pendingSubmission = nil
-            state = .idle
-        } catch is CancellationError {
-            state = .idle
-        } catch let error as FeedbackError {
-            state = .failure(error)
-        } catch {
-            state = .failure(.attachmentProcessingFailed)
-        }
+    func processAttachment(fileURL: URL) async {
+        await processAttachment(fileURL: fileURL, selectionID: nil)
+    }
+
+    func processAttachment(fileURL: URL, selectionID: UUID) async {
+        await processAttachment(fileURL: fileURL, selectionID: Optional(selectionID))
     }
 
     func reportAttachmentFailure(_ error: FeedbackError) {
-        guard !isSubmitting, !isProcessingAttachment else {
-            return
-        }
-        state = .failure(error)
+        reportAttachmentFailure(error, selectionID: nil)
+    }
+
+    func reportAttachmentFailure(_ error: FeedbackError, selectionID: UUID) {
+        reportAttachmentFailure(error, selectionID: Optional(selectionID))
     }
 
     func removeAttachment() {
@@ -186,8 +239,10 @@ final class FeedbackFormModel: ObservableObject {
         guard !isProcessingAttachment, !isSubmitting else {
             return
         }
+        cancelPendingAttachmentTimeout()
         attachment = nil
         pendingSubmission = nil
+        currentAttachmentSelectionID = nil
         state = .idle
     }
 
@@ -195,12 +250,159 @@ final class FeedbackFormModel: ObservableObject {
         guard !isSubmitting, !isProcessingAttachment else {
             return
         }
+        cancelPendingAttachmentTimeout()
         selectedCategory = configuration.categories.first
         message = ""
         email = ""
+        emailValidationError = nil
         attachment = nil
         pendingSubmission = nil
+        currentAttachmentSelectionID = nil
         state = .idle
+    }
+
+    private func processAttachment(data: Data, selectionID: UUID?) async {
+        guard !isAttachmentOptimizationInFlight, !isSubmitting else {
+            AttachmentPickerDebugLog.log("attachment.processing.data.dropped.busy id=\(selectionID?.uuidString ?? "nil")")
+            return
+        }
+        guard isCurrentAttachmentSelection(selectionID) else {
+            AttachmentPickerDebugLog.log("attachment.processing.data.dropped.stale id=\(selectionID?.uuidString ?? "nil") current=\(currentAttachmentSelectionID?.uuidString ?? "nil")")
+            return
+        }
+
+        AttachmentPickerDebugLog.log("attachment.processing.data.started id=\(selectionID?.uuidString ?? "nil") bytes=\(data.count)")
+        isAttachmentOptimizationInFlight = true
+        state = .processingAttachment
+        cancelPendingAttachmentTimeout(selectionID: selectionID)
+        defer {
+            isAttachmentOptimizationInFlight = false
+        }
+
+        do {
+            let optimizedAttachment = try await imageOptimizer.optimize(
+                data: data,
+                configuration: configuration.attachment
+            )
+            guard isCurrentAttachmentSelection(selectionID) else {
+                AttachmentPickerDebugLog.log("attachment.processing.data.dropped.afterOptimize id=\(selectionID?.uuidString ?? "nil") current=\(currentAttachmentSelectionID?.uuidString ?? "nil")")
+                return
+            }
+            AttachmentPickerDebugLog.log("attachment.assign.willSet id=\(selectionID?.uuidString ?? "nil") filename=\(optimizedAttachment.filename) bytes=\(optimizedAttachment.byteCount)")
+            attachment = optimizedAttachment
+            AttachmentPickerDebugLog.log("attachment.assign.didSet id=\(selectionID?.uuidString ?? "nil") filename=\(attachment?.filename ?? "nil") bytes=\(attachment?.byteCount ?? 0)")
+            pendingSubmission = nil
+            currentAttachmentSelectionID = nil
+            state = .idle
+            AttachmentPickerDebugLog.log("attachment.processing.data.completed id=\(selectionID?.uuidString ?? "nil")")
+        } catch is CancellationError {
+            if isCurrentAttachmentSelection(selectionID) {
+                state = .idle
+            }
+        } catch let error as FeedbackError {
+            if isCurrentAttachmentSelection(selectionID) {
+                currentAttachmentSelectionID = nil
+                state = .failure(error)
+                AttachmentPickerDebugLog.log("attachment.processing.failed")
+            }
+        } catch {
+            if isCurrentAttachmentSelection(selectionID) {
+                currentAttachmentSelectionID = nil
+                state = .failure(.attachmentProcessingFailed)
+                AttachmentPickerDebugLog.log("attachment.processing.failed")
+            }
+        }
+    }
+
+    private func processAttachment(fileURL: URL, selectionID: UUID?) async {
+        defer {
+            isAttachmentOptimizationInFlight = false
+            try? FileManager.default.removeItem(at: fileURL)
+        }
+
+        guard !isAttachmentOptimizationInFlight, !isSubmitting else {
+            AttachmentPickerDebugLog.log("attachment.processing.file.dropped.busy id=\(selectionID?.uuidString ?? "nil")")
+            return
+        }
+        guard isCurrentAttachmentSelection(selectionID) else {
+            AttachmentPickerDebugLog.log("attachment.processing.file.dropped.stale id=\(selectionID?.uuidString ?? "nil") current=\(currentAttachmentSelectionID?.uuidString ?? "nil")")
+            return
+        }
+
+        AttachmentPickerDebugLog.log("attachment.processing.file.started id=\(selectionID?.uuidString ?? "nil") file=\(fileURL.lastPathComponent)")
+        isAttachmentOptimizationInFlight = true
+        state = .processingAttachment
+        cancelPendingAttachmentTimeout(selectionID: selectionID)
+
+        do {
+            let optimizedAttachment = try await imageOptimizer.optimize(
+                fileURL: fileURL,
+                configuration: configuration.attachment
+            )
+            guard isCurrentAttachmentSelection(selectionID) else {
+                AttachmentPickerDebugLog.log("attachment.processing.file.dropped.afterOptimize id=\(selectionID?.uuidString ?? "nil") current=\(currentAttachmentSelectionID?.uuidString ?? "nil")")
+                return
+            }
+            AttachmentPickerDebugLog.log("attachment.assign.willSet id=\(selectionID?.uuidString ?? "nil") filename=\(optimizedAttachment.filename) bytes=\(optimizedAttachment.byteCount)")
+            attachment = optimizedAttachment
+            AttachmentPickerDebugLog.log("attachment.assign.didSet id=\(selectionID?.uuidString ?? "nil") filename=\(attachment?.filename ?? "nil") bytes=\(attachment?.byteCount ?? 0)")
+            pendingSubmission = nil
+            currentAttachmentSelectionID = nil
+            state = .idle
+            AttachmentPickerDebugLog.log("attachment.processing.file.completed id=\(selectionID?.uuidString ?? "nil")")
+        } catch is CancellationError {
+            if isCurrentAttachmentSelection(selectionID) {
+                state = .idle
+            }
+        } catch let error as FeedbackError {
+            if isCurrentAttachmentSelection(selectionID) {
+                currentAttachmentSelectionID = nil
+                state = .failure(error)
+                AttachmentPickerDebugLog.log("attachment.processing.failed")
+            }
+        } catch {
+            if isCurrentAttachmentSelection(selectionID) {
+                currentAttachmentSelectionID = nil
+                state = .failure(.attachmentProcessingFailed)
+                AttachmentPickerDebugLog.log("attachment.processing.failed")
+            }
+        }
+    }
+
+    private func reportAttachmentFailure(_ error: FeedbackError, selectionID: UUID?) {
+        guard !isSubmitting else {
+            return
+        }
+        guard isCurrentAttachmentSelection(selectionID) else {
+            AttachmentPickerDebugLog.log("provider.callback.drop.stale id=\(selectionID?.uuidString ?? "nil") current=\(currentAttachmentSelectionID?.uuidString ?? "nil")")
+            return
+        }
+        cancelPendingAttachmentTimeout(selectionID: selectionID)
+        currentAttachmentSelectionID = nil
+        state = .failure(error)
+        AttachmentPickerDebugLog.log("attachment.processing.failed")
+    }
+
+    private func handleAttachmentTimeoutIfCurrent(selectionID: UUID) {
+        guard isCurrentAttachmentSelection(selectionID) else {
+            AttachmentPickerDebugLog.log("provider.request.timedOut.dropped.stale id=\(selectionID.uuidString) current=\(currentAttachmentSelectionID?.uuidString ?? "nil")")
+            return
+        }
+
+        AttachmentPickerDebugLog.log("provider.request.timedOut id=\(selectionID.uuidString)")
+        pendingAttachmentTimeoutTask = nil
+        currentAttachmentSelectionID = nil
+        state = .failure(.attachmentProcessingFailed)
+        AttachmentPickerDebugLog.log("attachment.processing.failed")
+    }
+
+    private func cancelPendingAttachmentTimeout(selectionID: UUID? = nil) {
+        guard let pendingAttachmentTimeoutTask else {
+            return
+        }
+        pendingAttachmentTimeoutTask.cancel()
+        self.pendingAttachmentTimeoutTask = nil
+        AttachmentPickerDebugLog.log("provider.request.timeoutCancelled id=\(selectionID?.uuidString ?? "nil")")
     }
 
     private func handleDraftMutation() {
@@ -210,6 +412,13 @@ final class FeedbackFormModel: ObservableObject {
         } else if case .failure = state {
             state = .idle
         }
+    }
+
+    private func updateEmailValidationState() {
+        emailValidationError = FeedbackEmailValidation.validationError(
+            for: email,
+            configuration: configuration.emailField
+        )
     }
 
     private func makePendingSubmissionIdentity() -> PendingSubmissionIdentity {
@@ -223,6 +432,13 @@ final class FeedbackFormModel: ObservableObject {
                 attachment: attachment
             )
         )
+    }
+
+    private func isCurrentAttachmentSelection(_ selectionID: UUID?) -> Bool {
+        guard let selectionID else {
+            return true
+        }
+        return currentAttachmentSelectionID == selectionID
     }
 }
 

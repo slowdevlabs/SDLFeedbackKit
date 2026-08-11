@@ -5,6 +5,7 @@ import SwiftUI
 public struct FeedbackFormView: View {
     @State private var model: FeedbackFormModel
 
+    private let context: FeedbackContext
     private let configuration: FeedbackConfiguration
     private let onSubmitted: ((FeedbackSubmissionResult) -> Void)?
     private let onCancelled: (() -> Void)?
@@ -23,6 +24,7 @@ public struct FeedbackFormView: View {
         onSubmitted: ((FeedbackSubmissionResult) -> Void)? = nil,
         onCancelled: (() -> Void)? = nil
     ) {
+        self.context = context
         _model = State(
             wrappedValue: FeedbackFormModel(
                 context: context,
@@ -38,6 +40,7 @@ public struct FeedbackFormView: View {
     public var body: some View {
         FeedbackFormContentView(
             model: model,
+            context: context,
             configuration: configuration,
             onSubmitted: onSubmitted,
             onCancelled: onCancelled
@@ -47,16 +50,16 @@ public struct FeedbackFormView: View {
 
 private struct FeedbackFormContentView: View {
     @ObservedObject var model: FeedbackFormModel
+    let context: FeedbackContext
     @State private var handledSuccessClientID: UUID?
     @State private var isAttachmentPickerPresented = false
+    @State private var activeAttachmentSelectionID: UUID?
+    @Environment(\.locale) private var locale
+    @Environment(\.sizeCategory) private var sizeCategory
 
     let configuration: FeedbackConfiguration
     let onSubmitted: ((FeedbackSubmissionResult) -> Void)?
     let onCancelled: (() -> Void)?
-
-    private var submitDisabled: Bool {
-        !model.canSubmit || model.selectedCategory == nil || isSuccess || isAttachmentPickerPresented
-    }
 
     private var isSuccess: Bool {
         if case .success = model.state {
@@ -66,92 +69,135 @@ private struct FeedbackFormContentView: View {
     }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
-                Text(SDLFeedbackStrings.title)
-                    .font(.title.weight(.semibold))
+        let appliedSizeCategory = configuration.typographyPolicy.resolvedSizeCategory(from: sizeCategory)
+        VStack(spacing: 0) {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 24) {
+                    Text(SDLFeedbackLocalizedStrings.title(locale: locale))
+                        .font(.title.weight(.semibold))
 
-                FeedbackCategoryPicker(
-                    selection: $model.selectedCategory,
-                    categories: configuration.categories
-                )
-
-                FeedbackMessageEditor(
-                    text: $model.message,
-                    placeholder: SDLFeedbackStrings.messagePlaceholder
-                )
-
-                if configuration.emailField.isEnabled {
-                    FeedbackEmailField(
-                        text: $model.email,
-                        isRequired: configuration.emailField.isRequired
+                    FeedbackCategoryPicker(
+                        selection: $model.selectedCategory,
+                        categories: configuration.categories
                     )
-                }
 
-                if configuration.attachment.isEnabled {
-                    FeedbackAttachmentSection(
-                        attachment: model.attachment,
+                    FeedbackMessageEditor(
+                        text: $model.message,
+                        placeholder: SDLFeedbackLocalizedStrings.messagePlaceholder(locale: locale)
+                    )
+
+                    if configuration.emailField.isEnabled {
+                        FeedbackEmailField(
+                            text: $model.email,
+                            isRequired: configuration.emailField.isRequired,
+                            validationError: model.emailValidationError
+                        )
+                    }
+
+                    if configuration.attachment.isEnabled {
+                        FeedbackAttachmentSection(
+                            attachment: model.attachment,
+                            state: model.state,
+                            isInteractionDisabled: model.isSubmitting || model.isProcessingAttachment || isAttachmentPickerPresented || isSuccess,
+                            onPrimaryAction: {
+                                presentAttachmentPicker()
+                            },
+                            onRemove: {
+                                model.removeAttachment()
+                            }
+                        )
+                    }
+
+                    FeedbackSubmissionStatusView(
                         state: model.state,
-                        isInteractionDisabled: model.isSubmitting || model.isProcessingAttachment || isAttachmentPickerPresented || isSuccess,
-                        onPrimaryAction: {
-                            presentAttachmentPicker()
-                        },
-                        onRemove: {
-                            model.removeAttachment()
+                        onRetry: {
+                            guard case .failure(.submissionFailed) = model.state else {
+                                return
+                            }
+
+                            Task { @MainActor in
+                                await model.submit()
+                                deliverSuccessCallbackIfNeeded()
+                            }
                         }
                     )
+
+                    if let privacyPolicyURL = configuration.privacyPolicyURL,
+                       FeedbackPrivacyDisclosure.shouldDisplay(privacyPolicyURL: privacyPolicyURL) {
+                        FeedbackPrivacyDisclosureView(
+                            appName: context.appName,
+                            privacyPolicyURL: privacyPolicyURL
+                        )
+                        .padding(.top, 4)
+                    }
                 }
-
-                FeedbackSubmissionStatusView(
-                    state: model.state,
-                    onRetry: {
-                        guard case .failure(.submissionFailed) = model.state else {
-                            return
-                        }
-
-                        Task { @MainActor in
-                            await model.submit()
-                            deliverSuccessCallbackIfNeeded()
-                        }
-                    }
-                )
-
-                HStack(spacing: 12) {
-                    if configuration.showsCancelButton {
-                        Button(SDLFeedbackStrings.cancel) {
-                            onCancelled?()
-                        }
-                        .disabled(model.isSubmitting || model.isProcessingAttachment || isAttachmentPickerPresented)
-                    }
-
-                    Spacer(minLength: 0)
-
-                    Button(action: submit) {
-                        Text(model.isSubmitting ? SDLFeedbackStrings.submitting : SDLFeedbackStrings.submit)
-                    }
-                    .disabled(submitDisabled)
-                }
+                .frame(maxWidth: 640, alignment: .leading)
+                .frame(maxWidth: .infinity, alignment: .center)
+                .padding(.horizontal, 20)
+                .padding(.top, 24)
+                .padding(.bottom, 28)
             }
-            .frame(maxWidth: 640, alignment: .leading)
-            .frame(maxWidth: .infinity, alignment: .center)
-            .padding(.horizontal, 20)
-            .padding(.vertical, 24)
+
+            Divider()
+
+            FeedbackFormActionBar(
+                configuration: configuration,
+                model: model,
+                isAttachmentPickerPresented: isAttachmentPickerPresented,
+                isSuccess: isSuccess,
+                locale: locale,
+                onCancel: {
+                    AttachmentPickerDebugLog.log("feedbackForm.onCancelled.invoked")
+                    onCancelled?()
+                },
+                onSubmit: submit
+            )
         }
+        .background(FeedbackFormBackground())
+        .onAppear {
+            AttachmentPickerDebugLog.log("feedbackForm.appear")
+        }
+        .onDisappear {
+            AttachmentPickerDebugLog.log("feedbackForm.disappear")
+        }
+        .environment(\.sizeCategory, appliedSizeCategory)
         .sheet(isPresented: $isAttachmentPickerPresented) {
-            AttachmentPickerHost { outcome in
-                Task { @MainActor in
-                    isAttachmentPickerPresented = false
-
-                    switch outcome {
-                    case let .selected(data):
-                        await model.processAttachment(data: data)
-                    case let .failed(error):
-                        model.reportAttachmentFailure(error)
-                    case .cancelled:
-                        break
+            AttachmentPickerHost(
+                onSelectionAccepted: {
+                    let selectionID = activeAttachmentSelectionID
+                    Task { @MainActor in
+                        AttachmentPickerDebugLog.log("picker.selectionAccepted.received id=\(selectionID?.uuidString ?? "nil")")
+                        if let selectionID {
+                            model.beginAttachmentAcquisition(selectionID: selectionID)
+                        }
+                        AttachmentPickerDebugLog.log("nestedPicker.isPresented = false id=\(selectionID?.uuidString ?? "nil")")
+                        isAttachmentPickerPresented = false
+                    }
+                },
+                onOutcome: { outcome in
+                    Task { @MainActor in
+                        AttachmentPickerDebugLog.log("picker.outcome.dispatch.requested id=\(activeAttachmentSelectionID?.uuidString ?? "nil")")
+                        if let selectionID = activeAttachmentSelectionID {
+                            model.markAttachmentProviderResponse(selectionID: selectionID)
+                        }
+                        await AttachmentPickerOutcomeDispatcher(
+                            selectionID: activeAttachmentSelectionID,
+                            dismissPicker: {
+                                isAttachmentPickerPresented = false
+                            },
+                            processData: { data, selectionID in
+                                await model.processAttachment(data: data, selectionID: selectionID)
+                            },
+                            processFile: { fileURL, selectionID in
+                                await model.processAttachment(fileURL: fileURL, selectionID: selectionID)
+                            },
+                            reportFailure: { error, selectionID in
+                                model.reportAttachmentFailure(error, selectionID: selectionID)
+                            }
+                        ).dispatch(outcome)
                     }
                 }
-            }
+            )
         }
     }
 
@@ -171,6 +217,7 @@ private struct FeedbackFormContentView: View {
         }
 
         handledSuccessClientID = result.clientID
+        AttachmentPickerDebugLog.log("feedbackForm.onSubmitted.invoked")
         onSubmitted?(result)
     }
 
@@ -181,7 +228,62 @@ private struct FeedbackFormContentView: View {
               !isSuccess else {
             return
         }
+        activeAttachmentSelectionID = model.beginAttachmentSelection()
+        AttachmentPickerDebugLog.log("feedbackForm.presentAttachmentPicker id=\(activeAttachmentSelectionID?.uuidString ?? "nil")")
         isAttachmentPickerPresented = true
+    }
+}
+
+private struct FeedbackFormActionBar: View {
+    let configuration: FeedbackConfiguration
+    @ObservedObject var model: FeedbackFormModel
+    let isAttachmentPickerPresented: Bool
+    let isSuccess: Bool
+    let locale: Locale
+    let onCancel: () -> Void
+    let onSubmit: () -> Void
+
+    private var submitDisabled: Bool {
+        !model.canSubmit || model.selectedCategory == nil || isSuccess || isAttachmentPickerPresented
+    }
+
+    var body: some View {
+        HStack(spacing: 12) {
+            if configuration.showsCancelButton {
+                Button(SDLFeedbackLocalizedStrings.cancel(locale: locale)) {
+                    onCancel()
+                }
+                .disabled(model.isSubmitting || model.isProcessingAttachment || isAttachmentPickerPresented)
+            }
+
+            Spacer(minLength: 0)
+
+            Button(action: onSubmit) {
+                Text(
+                    model.isSubmitting
+                        ? SDLFeedbackLocalizedStrings.submitting(locale: locale)
+                        : SDLFeedbackLocalizedStrings.submit(locale: locale)
+                )
+            }
+            .disabled(submitDisabled)
+        }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 14)
+        .frame(maxWidth: .infinity)
+    }
+}
+
+private struct FeedbackFormBackground: View {
+    var body: some View {
+#if os(iOS)
+        Color(UIColor.systemBackground)
+            .edgesIgnoringSafeArea(.all)
+#elseif os(macOS)
+        Color(NSColor.windowBackgroundColor)
+            .edgesIgnoringSafeArea(.all)
+#else
+        Color(.background)
+#endif
     }
 }
 #endif

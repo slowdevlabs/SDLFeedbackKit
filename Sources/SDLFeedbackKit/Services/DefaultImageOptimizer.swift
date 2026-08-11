@@ -11,6 +11,14 @@ struct DefaultImageOptimizer: ImageOptimizer {
         return result.attachment
     }
 
+    func optimize(
+        fileURL: URL,
+        configuration: AttachmentConfiguration
+    ) async throws -> FeedbackAttachment {
+        let result = try await process(fileURL: fileURL, configuration: configuration)
+        return result.attachment
+    }
+
     func process(
         data: Data,
         configuration: AttachmentConfiguration
@@ -20,16 +28,43 @@ struct DefaultImageOptimizer: ImageOptimizer {
         }.value
     }
 
+    func process(
+        fileURL: URL,
+        configuration: AttachmentConfiguration
+    ) async throws -> ImageProcessingResult {
+        try await Task.detached(priority: .userInitiated) {
+            try Self.processSynchronously(fileURL: fileURL, configuration: configuration)
+        }.value
+    }
+
     private static func processSynchronously(
         data: Data,
+        configuration: AttachmentConfiguration
+    ) throws -> ImageProcessingResult {
+        guard let source = CGImageSourceCreateWithData(data as CFData, nil) else {
+            throw FeedbackError.unsupportedAttachment
+        }
+        return try processSynchronously(source: source, configuration: configuration)
+    }
+
+    private static func processSynchronously(
+        fileURL: URL,
+        configuration: AttachmentConfiguration
+    ) throws -> ImageProcessingResult {
+        guard let source = CGImageSourceCreateWithURL(fileURL as CFURL, nil) else {
+            throw FeedbackError.unsupportedAttachment
+        }
+        return try processSynchronously(source: source, configuration: configuration)
+    }
+
+    private static func processSynchronously(
+        source: CGImageSource,
         configuration: AttachmentConfiguration
     ) throws -> ImageProcessingResult {
         try Task.checkCancellation()
         try validate(configuration: configuration)
 
-        guard !data.isEmpty,
-              let source = CGImageSourceCreateWithData(data as CFData, nil),
-              CGImageSourceGetCount(source) > 0 else {
+        guard CGImageSourceGetCount(source) > 0 else {
             throw FeedbackError.unsupportedAttachment
         }
 

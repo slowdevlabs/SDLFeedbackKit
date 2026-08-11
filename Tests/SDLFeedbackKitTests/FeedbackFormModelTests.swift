@@ -105,6 +105,59 @@ final class FeedbackFormModelTests: XCTestCase {
         XCTAssertEqual(callCount, 0)
     }
 
+    func testOptionalEmailValidationStateTracksInput() {
+        let transport = SequenceTransport(outcomes: [])
+        let model = makeModel(transport: transport)
+
+        XCTAssertNil(model.emailValidationError)
+        XCTAssertTrue(model.canSubmit)
+
+        model.email = "user example@example.com"
+
+        XCTAssertEqual(model.emailValidationError, .invalidEmail)
+        XCTAssertFalse(model.canSubmit)
+
+        model.email = "name@example.com"
+
+        XCTAssertNil(model.emailValidationError)
+        XCTAssertTrue(model.canSubmit)
+    }
+
+    func testEmptyOptionalEmailRemainsValid() {
+        let transport = SequenceTransport(outcomes: [])
+        let model = makeModel(transport: transport)
+
+        model.email = ""
+
+        XCTAssertNil(model.emailValidationError)
+        XCTAssertTrue(model.canSubmit)
+    }
+
+    func testInvalidEmailBlocksSubmissionUntilCorrected() async {
+        let transport = SequenceTransport(outcomes: [.success(FeedbackSubmissionReceipt())])
+        let model = makeModel(transport: transport)
+        model.message = "Email validation"
+        model.email = "user example@example.com"
+
+        await model.submit()
+
+        XCTAssertEqual(model.emailValidationError, .invalidEmail)
+        XCTAssertFalse(model.canSubmit)
+        assertIdle(model.state)
+        let callCount = await transport.callCount()
+        XCTAssertEqual(callCount, 0)
+
+        model.email = "valid@example.com"
+
+        XCTAssertNil(model.emailValidationError)
+        XCTAssertTrue(model.canSubmit)
+
+        await model.submit()
+
+        let updatedCallCount = await transport.callCount()
+        XCTAssertEqual(updatedCallCount, 1)
+    }
+
     func testTransportFailureMapsToSubmissionFailed() async {
         enum MockError: Error {
             case failed
@@ -177,6 +230,157 @@ final class FeedbackFormModelTests: XCTestCase {
         XCTAssertEqual(model.attachment?.byteCount, 3)
         XCTAssertEqual(model.attachment?.pixelWidth, 10)
         XCTAssertEqual(model.attachment?.pixelHeight, 20)
+    }
+
+    func testAttachmentProviderTimeoutPreservesDraftAndExistingAttachment() async {
+        let existingAttachment = makeAttachment(
+            data: Data([0xAA, 0xBB]),
+            filename: "existing.jpg",
+            mimeType: "image/jpeg",
+            pixelWidth: 20,
+            pixelHeight: 10
+        )
+        let transport = SequenceTransport(outcomes: [])
+        let optimizer = SequenceImageOptimizer(outcomes: [.success(existingAttachment)])
+        let model = makeModel(
+            transport: transport,
+            imageOptimizer: optimizer,
+            attachmentProviderTimeoutNanoseconds: 50_000_000
+        )
+        model.selectedCategory = .featureRequest
+        model.message = "Keep this draft"
+        model.email = "draft@example.com"
+
+        await model.processAttachment(data: Data([0x01]))
+        XCTAssertEqual(model.attachment?.filename, "existing.jpg")
+        assertIdle(model.state)
+
+        let selectionID = model.beginAttachmentSelection()
+        model.beginAttachmentAcquisition(selectionID: selectionID)
+
+        try? await Task.sleep(nanoseconds: 150_000_000)
+
+        assertFailure(model.state, .attachmentProcessingFailed)
+        XCTAssertEqual(model.selectedCategory?.id, FeedbackCategory.featureRequest.id)
+        XCTAssertEqual(model.message, "Keep this draft")
+        XCTAssertEqual(model.email, "draft@example.com")
+        XCTAssertEqual(model.attachment?.filename, "existing.jpg")
+    }
+
+    func testSuccessBeforeTimeoutCancelsProviderTimeout() async {
+        let attachment = makeAttachment(
+            data: Data([0x01, 0x02, 0x03, 0x04]),
+            filename: "fresh.jpg",
+            mimeType: "image/jpeg",
+            pixelWidth: 8,
+            pixelHeight: 4
+        )
+        let transport = SequenceTransport(outcomes: [])
+        let optimizer = SequenceImageOptimizer(outcomes: [.success(attachment)])
+        let model = makeModel(
+            transport: transport,
+            imageOptimizer: optimizer,
+            attachmentProviderTimeoutNanoseconds: 50_000_000
+        )
+
+        let selectionID = model.beginAttachmentSelection()
+        model.beginAttachmentAcquisition(selectionID: selectionID)
+        model.markAttachmentProviderResponse(selectionID: selectionID)
+
+        await model.processAttachment(data: Data([0x10, 0x20]), selectionID: selectionID)
+
+        assertIdle(model.state)
+        XCTAssertEqual(model.attachment?.filename, "fresh.jpg")
+
+        try? await Task.sleep(nanoseconds: 150_000_000)
+
+        assertIdle(model.state)
+        XCTAssertEqual(model.attachment?.filename, "fresh.jpg")
+    }
+
+    func testProviderErrorBeforeTimeoutCancelsProviderTimeout() async {
+        let transport = SequenceTransport(outcomes: [])
+        let model = makeModel(
+            transport: transport,
+            attachmentProviderTimeoutNanoseconds: 50_000_000
+        )
+
+        let selectionID = model.beginAttachmentSelection()
+        model.beginAttachmentAcquisition(selectionID: selectionID)
+        model.markAttachmentProviderResponse(selectionID: selectionID)
+        model.reportAttachmentFailure(.attachmentProcessingFailed, selectionID: selectionID)
+
+        assertFailure(model.state, .attachmentProcessingFailed)
+
+        try? await Task.sleep(nanoseconds: 150_000_000)
+
+        assertFailure(model.state, .attachmentProcessingFailed)
+        XCTAssertNil(model.attachment)
+    }
+
+    func testLateAttachmentCallbackAfterTimeoutIsIgnored() async {
+        let transport = SequenceTransport(outcomes: [])
+        let model = makeModel(
+            transport: transport,
+            attachmentProviderTimeoutNanoseconds: 50_000_000
+        )
+
+        let selectionID = model.beginAttachmentSelection()
+        model.beginAttachmentAcquisition(selectionID: selectionID)
+
+        try? await Task.sleep(nanoseconds: 150_000_000)
+
+        assertFailure(model.state, .attachmentProcessingFailed)
+
+        await model.processAttachment(data: Data([0x10, 0x20]), selectionID: selectionID)
+
+        assertFailure(model.state, .attachmentProcessingFailed)
+        XCTAssertNil(model.attachment)
+    }
+
+    func testNewSelectionWinsOverExpiredSelection() async {
+        let transport = SequenceTransport(outcomes: [])
+        let optimizer = DataEchoImageOptimizer()
+        let model = makeModel(
+            transport: transport,
+            imageOptimizer: optimizer,
+            attachmentProviderTimeoutNanoseconds: 50_000_000
+        )
+
+        let firstSelectionID = model.beginAttachmentSelection()
+        model.beginAttachmentAcquisition(selectionID: firstSelectionID)
+
+        let secondSelectionID = model.beginAttachmentSelection()
+        model.beginAttachmentAcquisition(selectionID: secondSelectionID)
+
+        await model.processAttachment(data: Data([0x10, 0x20, 0x30, 0x40]), selectionID: secondSelectionID)
+
+        XCTAssertEqual(model.attachment?.byteCount, 4)
+        assertIdle(model.state)
+
+        await model.processAttachment(data: Data([0x01, 0x02]), selectionID: firstSelectionID)
+
+        XCTAssertEqual(model.attachment?.byteCount, 4)
+        assertIdle(model.state)
+    }
+
+    func testStaleAttachmentSelectionDoesNotOverwriteNewerSelection() async {
+        let transport = SequenceTransport(outcomes: [])
+        let optimizer = DataEchoImageOptimizer()
+        let model = makeModel(transport: transport, imageOptimizer: optimizer)
+
+        let staleSelectionID = model.beginAttachmentSelection()
+        let freshSelectionID = model.beginAttachmentSelection()
+
+        await model.processAttachment(data: Data([0x01]), selectionID: staleSelectionID)
+
+        XCTAssertNil(model.attachment)
+        assertIdle(model.state)
+
+        await model.processAttachment(data: Data([0x10, 0x20, 0x30]), selectionID: freshSelectionID)
+
+        XCTAssertEqual(model.attachment?.byteCount, 3)
+        assertIdle(model.state)
     }
 
     func testRemoveAttachmentClearsAttachmentAndIdentity() async {
@@ -525,6 +729,7 @@ final class FeedbackFormModelTests: XCTestCase {
         transport: any FeedbackTransport,
         payloadBuilder: FeedbackPayloadBuilder? = nil,
         imageOptimizer: any ImageOptimizer = SequenceImageOptimizer(outcomes: []),
+        attachmentProviderTimeoutNanoseconds: UInt64 = 5_000_000_000,
         uuidProvider: @escaping () -> UUID = { UUID(uuidString: "99999999-9999-9999-9999-999999999999")! },
         dateProvider: @escaping () -> Date = { Date(timeIntervalSince1970: 9_999) }
     ) -> FeedbackFormModel {
@@ -546,7 +751,8 @@ final class FeedbackFormModelTests: XCTestCase {
             payloadBuilder: builder,
             imageOptimizer: imageOptimizer,
             uuidProvider: uuidProvider,
-            dateProvider: dateProvider
+            dateProvider: dateProvider,
+            attachmentProviderTimeoutNanoseconds: attachmentProviderTimeoutNanoseconds
         )
     }
 
@@ -651,6 +857,21 @@ private actor BlockingImageOptimizer: ImageOptimizer {
     func resume(with attachment: FeedbackAttachment) {
         continuation?.resume(returning: attachment)
         continuation = nil
+    }
+}
+
+private actor DataEchoImageOptimizer: ImageOptimizer {
+    func optimize(
+        data: Data,
+        configuration: AttachmentConfiguration
+    ) async throws -> FeedbackAttachment {
+        makeAttachment(
+            data: data,
+            filename: "feedback.jpg",
+            mimeType: "image/jpeg",
+            pixelWidth: 1,
+            pixelHeight: 1
+        )
     }
 }
 

@@ -1,4 +1,5 @@
 import XCTest
+import Foundation
 
 @testable import SDLFeedbackKit
 
@@ -27,6 +28,21 @@ final class FeedbackFormViewTests: XCTestCase {
                 _ = result.clientID
             },
             onCancelled: {}
+        )
+
+        XCTAssertNotNil(view)
+    }
+
+    func testFeedbackFormViewInitializerAcceptsPrivacyPolicyURL() {
+        let view = FeedbackFormView(
+            context: FeedbackContext(
+                appID: "test-app",
+                appName: "Test App"
+            ),
+            transport: MockTransport(),
+            configuration: FeedbackConfiguration(
+                privacyPolicyURL: URL(string: "https://example.invalid/privacy")!
+            )
         )
 
         XCTAssertNotNil(view)

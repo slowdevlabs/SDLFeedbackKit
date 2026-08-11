@@ -87,6 +87,23 @@ final class DefaultImageOptimizerTests: XCTestCase {
         XCTAssertNotNil(makeImageSource(from: attachment.data))
     }
 
+    func testFileURLInputProducesJPEGOutput() async throws {
+        let source = try ImageTestFactory.noisyJPEGData(width: 2400, height: 1800)
+        let inputURL = try makeTemporaryFile(containing: source, fileExtension: "jpg")
+        defer {
+            try? FileManager.default.removeItem(at: inputURL)
+        }
+
+        let attachment = try await optimizer.optimize(fileURL: inputURL, configuration: .default)
+
+        XCTAssertEqual(attachment.mimeType, "image/jpeg")
+        XCTAssertEqual(attachment.filename, "feedback.jpg")
+        XCTAssertLessThanOrEqual(attachment.byteCount, 1_000_000)
+        XCTAssertLessThanOrEqual(attachment.pixelWidth ?? .max, 1_800)
+        XCTAssertLessThanOrEqual(attachment.pixelHeight ?? .max, 1_800)
+        XCTAssertNotNil(makeImageSource(from: attachment.data))
+    }
+
     func testPNGInputProducesJPEGOutputAndDoesNotUpscale() async throws {
         let source = try ImageTestFactory.transparentPNGData(width: 500, height: 500)
         let attachment = try await optimizer.optimize(data: source, configuration: .default)
@@ -187,6 +204,14 @@ final class DefaultImageOptimizerTests: XCTestCase {
             return nil
         }
         return CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [String: Any]
+    }
+
+    private func makeTemporaryFile(containing data: Data, fileExtension: String) throws -> URL {
+        let url = FileManager.default.temporaryDirectory
+            .appendingPathComponent("sdlfeedbackkit-test-\(UUID().uuidString)")
+            .appendingPathExtension(fileExtension)
+        try data.write(to: url, options: .atomic)
+        return url
     }
 }
 

@@ -1,4 +1,5 @@
 import XCTest
+import Foundation
 @testable import SDLFeedbackKit
 
 final class FeedbackConfigurationTests: XCTestCase {
@@ -32,5 +33,20 @@ final class FeedbackConfigurationTests: XCTestCase {
 
         XCTAssertEqual(configuration.categories.count, 4)
         XCTAssertTrue(configuration.showsCancelButton)
+        XCTAssertNil(configuration.privacyPolicyURL)
+        XCTAssertEqual(configuration.typographyPolicy, .system)
+    }
+
+    func testFeedbackConfigurationRetainsPrivacyPolicyURL() {
+        let url = URL(string: "https://example.invalid/privacy")!
+        let configuration = FeedbackConfiguration(privacyPolicyURL: url)
+
+        XCTAssertEqual(configuration.privacyPolicyURL, url)
+    }
+
+    func testFeedbackConfigurationRetainsTypographyPolicy() {
+        let configuration = FeedbackConfiguration(typographyPolicy: .restrained)
+
+        XCTAssertEqual(configuration.typographyPolicy, .restrained)
     }
 }

@@ -73,6 +73,18 @@ final class FeedbackValidatorTests: XCTestCase {
         }
     }
 
+    func testEmailValidationAcceptsPlusAddressingAndRejectsWhitespaceInside() {
+        let context = FeedbackContext(appID: "my-app", appName: "My App")
+        let validDraft = FeedbackDraft(category: .general, message: "Hello", email: "user.name+feedback@example.co.kr")
+        let invalidDraft = FeedbackDraft(category: .general, message: "Hello", email: "user example@example.com")
+
+        XCTAssertNoThrow(try validator.validate(context: context, draft: validDraft, configuration: .default))
+
+        XCTAssertThrowsError(try validator.validate(context: context, draft: invalidDraft, configuration: .default)) { error in
+            XCTAssertEqual(error as? FeedbackError, .invalidEmail)
+        }
+    }
+
     func testMetadataValidation() {
         let context = FeedbackContext(appID: "my-app", appName: "My App", metadata: ["": "value"])
         let draft = FeedbackDraft(category: .general, message: "Hello")

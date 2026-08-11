@@ -4,8 +4,10 @@
 "feedback.category.bug" = "Bug Report";
 "feedback.category.feature_request" = "Feature Request";
 "feedback.category.other" = "Other";
+"feedback.category.collapsed" = "Collapsed";
+"feedback.category.expanded" = "Expanded";
 "feedback.message.title" = "Message";
-"feedback.message.placeholder" = "Describe what happened...";
+"feedback.message.placeholder" = "Tell us your feedback or describe the issue in detail.";
 "feedback.email.title" = "Email";
 "feedback.email.optional" = "Optional";
 "feedback.attachment.add" = "Add Image";
@@ -13,9 +15,12 @@
 "feedback.attachment.remove" = "Remove Image";
 "feedback.attachment.preparing" = "Preparing Image...";
 "feedback.attachment.failed" = "Couldn't Attach Image";
+"feedback.attachment.load_failed" = "This photo couldn’t be loaded. Please choose another photo.";
 "feedback.attachment.too_large" = "Image Too Large";
 "feedback.attachment.title" = "Attachment";
 "feedback.attachment.none" = "No image attached";
+"feedback.privacy.disclosure.body" = "Feedback sent to %@ may include your message, optional email address, and an attached image.";
+"feedback.privacy.policy" = "Privacy Policy";
 "feedback.submit" = "Send";
 "feedback.submitting" = "Sending...";
 "feedback.success.title" = "Thanks";
@@ -23,5 +28,5 @@
 "feedback.error.title" = "Something Went Wrong";
 "feedback.error.generic" = "Couldn't send feedback.";
 "feedback.error.retry" = "Try Again";
-"feedback.error.invalid_email" = "Please enter a valid email address.";
+"feedback.error.invalid_email" = "Enter a valid email address.";
 "feedback.cancel" = "Cancel";

@@ -4,10 +4,11 @@ import Foundation
 import SwiftUI
 
 struct PlatformAttachmentPickerView: NSViewRepresentable {
+    let onSelectionAccepted: () -> Void
     let onOutcome: (AttachmentPickerOutcome) -> Void
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(onOutcome: onOutcome)
+        Coordinator(onSelectionAccepted: onSelectionAccepted, onOutcome: onOutcome)
     }
 
     func makeNSView(context: Context) -> NSView {
@@ -21,10 +22,15 @@ struct PlatformAttachmentPickerView: NSViewRepresentable {
     func updateNSView(_ nsView: NSView, context: Context) {}
 
     final class Coordinator {
+        private let onSelectionAccepted: () -> Void
         private let onOutcome: (AttachmentPickerOutcome) -> Void
         private var didPresent = false
 
-        init(onOutcome: @escaping (AttachmentPickerOutcome) -> Void) {
+        init(
+            onSelectionAccepted: @escaping () -> Void,
+            onOutcome: @escaping (AttachmentPickerOutcome) -> Void
+        ) {
+            self.onSelectionAccepted = onSelectionAccepted
             self.onOutcome = onOutcome
         }
 
@@ -44,6 +50,7 @@ struct PlatformAttachmentPickerView: NSViewRepresentable {
                 onOutcome(.cancelled)
                 return
             }
+            onSelectionAccepted()
 
             let didStartAccessing = url.startAccessingSecurityScopedResource()
             defer {

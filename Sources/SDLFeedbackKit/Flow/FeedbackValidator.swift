@@ -82,11 +82,11 @@ struct FeedbackValidator: Sendable {
         _ email: String?,
         configuration: EmailFieldConfiguration
     ) throws {
-        if configuration.isEnabled == false {
+        guard configuration.isEnabled else {
             return
         }
 
-        let normalized = normalizeEmail(email, configuration: configuration)
+        let normalized = FeedbackEmailValidation.normalizedEmail(email, configuration: configuration)
         if configuration.isRequired {
             guard let normalized, !normalized.isEmpty else {
                 throw FeedbackError.invalidEmail
@@ -95,7 +95,7 @@ struct FeedbackValidator: Sendable {
 
         if let normalized {
             guard normalized.count <= configuration.maximumLength,
-                  isPlausibleEmail(normalized) else {
+                  FeedbackEmailValidation.validationError(for: normalized, configuration: configuration) == nil else {
                 throw FeedbackError.invalidEmail
             }
         }
@@ -146,10 +146,7 @@ struct FeedbackValidator: Sendable {
         _ email: String?,
         configuration: EmailFieldConfiguration
     ) -> String? {
-        guard configuration.isEnabled else { return nil }
-        let trimmed = email?.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard let trimmed, !trimmed.isEmpty else { return nil }
-        return trimmed
+        FeedbackEmailValidation.normalizedEmail(email, configuration: configuration)
     }
 
     private func isValidAppID(_ value: String) -> Bool {
@@ -165,13 +162,6 @@ struct FeedbackValidator: Sendable {
         return !trimmed.isEmpty && trimmed.count <= maxLength
     }
 
-    private func isPlausibleEmail(_ value: String) -> Bool {
-        let parts = value.split(separator: "@", omittingEmptySubsequences: false)
-        guard parts.count == 2 else { return false }
-        let local = parts[0]
-        let domain = parts[1]
-        return !local.isEmpty && !domain.isEmpty && domain.contains(".")
-    }
 }
 
 struct NormalizedFeedbackDraft: Sendable {

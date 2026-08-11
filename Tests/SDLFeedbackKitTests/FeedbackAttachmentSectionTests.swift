@@ -3,6 +3,21 @@ import XCTest
 @testable import SDLFeedbackKit
 
 final class FeedbackAttachmentSectionTests: XCTestCase {
+    func testAttachmentPresentationUsesAttachmentSpecificMessage() {
+        XCTAssertNotNil(FeedbackAttachmentPresentation.processingMessage(for: .processingAttachment, locale: .init(identifier: "en")))
+        XCTAssertNotNil(FeedbackAttachmentPresentation.attachmentErrorMessage(for: .failure(.attachmentProcessingFailed), locale: .init(identifier: "en")))
+        XCTAssertNotNil(FeedbackAttachmentPresentation.attachmentErrorMessage(for: .failure(.unsupportedAttachment), locale: .init(identifier: "en")))
+        XCTAssertNil(FeedbackAttachmentPresentation.attachmentErrorMessage(for: .failure(.submissionFailed), locale: .init(identifier: "en")))
+    }
+
+    func testAttachmentPresentationSuppressesGlobalFailureForAttachmentErrors() {
+        XCTAssertTrue(FeedbackAttachmentPresentation.shouldSuppressGlobalFailure(for: .attachmentProcessingFailed))
+        XCTAssertTrue(FeedbackAttachmentPresentation.shouldSuppressGlobalFailure(for: .attachmentTooLarge))
+        XCTAssertTrue(FeedbackAttachmentPresentation.shouldSuppressGlobalFailure(for: .unsupportedAttachment))
+        XCTAssertFalse(FeedbackAttachmentPresentation.shouldSuppressGlobalFailure(for: .submissionFailed))
+        XCTAssertFalse(FeedbackAttachmentPresentation.shouldSuppressGlobalFailure(for: .invalidInput))
+    }
+
     func testAttachmentSectionInitializesForEmptyState() {
         let section = FeedbackAttachmentSection(
             attachment: nil,

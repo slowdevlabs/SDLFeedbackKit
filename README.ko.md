@@ -60,7 +60,7 @@ Xcode에서 아래 저장소 URL을 사용해 SDLFeedbackKit을 추가합니다.
 https://github.com/slowdevlabs/SDLFeedbackKit
 ```
 
-`0.1.0` 이상, `0.1.x` 범위의 버전을 선택하세요.
+`0.2.0` 이상, `0.2.x` 범위의 버전을 선택하세요.
 
 이 저장소 안에서 작업할 때 예제 앱은 로컬 package checkout을 사용합니다.
 
@@ -137,6 +137,18 @@ struct MyFeedbackTransport: FeedbackTransport {
 - 첨부파일 설정
 - 메시지 설정
 - 취소 버튼 표시 여부
+- 선택적 호스트 개인정보처리방침 안내
+- 타이포그래피 정책
+
+앱에 자체 개인정보처리방침 URL이 있다면 configuration으로 전달하세요.
+
+```swift
+let configuration = FeedbackConfiguration(
+    privacyPolicyURL: appPrivacyPolicyURL
+)
+```
+
+`privacyPolicyURL`가 `nil`이면 SDLFeedbackKit은 이 안내를 숨깁니다.
 
 ### 기본 첨부파일 정책
 
@@ -210,6 +222,7 @@ SDLFeedbackKit은 백엔드와 개인정보 처리 정책을 호스트 앱이 �
 - 선택한 이미지는 메타데이터와 파일 크기를 줄이기 위해 재인코딩됩니다
 - 백엔드 secret을 앱 바이너리에 포함하면 안 됩니다
 - 서버 측 검증과 악용 방지는 백엔드의 책임입니다
+- 개인정보 처리방침 안내를 표시하려면 호스트 앱이 자체 개인정보처리방침 URL을 제공하고, 피드백에서 수집되는 데이터와 일치하도록 정책을 유지해야 합니다
 
 ---
 
@@ -251,9 +264,9 @@ SDLFeedbackKit은 의도적으로 범위를 작게 유지합니다.
 
 ## 상태
 
-**Early release — 0.1.x**
+**Release — 0.2.x**
 
-현재 실제 앱에 통합할 수 있는 상태이지만, `0.x` 버전 동안 Public API는 계속 개선될 수 있습니다.
+현재 실제 앱에 통합할 수 있는 상태이며, `0.x` 버전 동안 Public API는 의미론적 버전 규칙에 따라 발전할 수 있습니다.
 
 ---
 

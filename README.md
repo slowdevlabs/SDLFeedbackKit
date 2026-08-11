@@ -60,7 +60,7 @@ Add SDLFeedbackKit in Xcode using:
 https://github.com/slowdevlabs/SDLFeedbackKit
 ```
 
-Choose version `0.1.0` or later within the `0.1.x` series.
+Choose version `0.2.0` or later within the `0.2.x` series.
 
 When working inside this repository, the example apps use the local package checkout.
 
@@ -137,6 +137,18 @@ The included example apps use a mock transport. Submitted feedback from the exam
 - attachment settings
 - message settings
 - cancel button visibility
+- optional host privacy policy footer
+- typography policy
+
+If your app has its own privacy policy URL, pass it through configuration:
+
+```swift
+let configuration = FeedbackConfiguration(
+    privacyPolicyURL: appPrivacyPolicyURL
+)
+```
+
+When `privacyPolicyURL` is `nil`, SDLFeedbackKit hides the footer entirely.
 
 ### Default attachment policy
 
@@ -210,6 +222,7 @@ SDLFeedbackKit is designed to keep backend and privacy policy decisions in the h
 - Selected images are re-encoded to reduce metadata and file size
 - Backend secrets should never be embedded in the app binary
 - Server-side validation and abuse prevention remain the backend's responsibility
+- If you enable the privacy footer, the host app should supply its own privacy policy URL and keep the policy accurate for the feedback data it collects
 
 ---
 
@@ -251,9 +264,9 @@ SDLFeedbackKit intentionally keeps its scope small.
 
 ## Status
 
-**Early release — 0.1.x**
+**Release — 0.2.x**
 
-The package is ready for integration, but the public API may continue to evolve during the `0.x` series.
+The package is ready for integration, and new versions will continue to follow semantic versioning within the `0.x` series.
 
 ---
 
