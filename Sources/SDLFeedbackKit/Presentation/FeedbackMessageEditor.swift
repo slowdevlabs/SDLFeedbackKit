@@ -6,8 +6,21 @@ struct FeedbackMessageEditor: View {
     let placeholder: String
     @Environment(\.locale) private var locale
     @Environment(\.sizeCategory) private var sizeCategory
+#if os(iOS)
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
+#endif
 
-    private let minimumHeight: CGFloat = 140
+    private var minimumHeight: CGFloat {
+#if os(iOS)
+        FeedbackFormPresentationMetrics.messageEditorMinimumHeight(
+            isRegularWidth: horizontalSizeClass == .regular,
+            isCompactHeight: verticalSizeClass == .compact
+        )
+#else
+        FeedbackFormPresentationMetrics.messageEditorMinimumHeight(isRegularWidth: false, isCompactHeight: false)
+#endif
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -16,16 +29,8 @@ struct FeedbackMessageEditor: View {
 
             ZStack(alignment: .topLeading) {
                 MultilineTextView(text: $text, sizeCategory: sizeCategory)
-                    .frame(minHeight: minimumHeight)
+                    .frame(maxWidth: .infinity, minHeight: minimumHeight, alignment: .leading)
                     .padding(10)
-                    .background(
-                        RoundedRectangle(cornerRadius: 12)
-                            .fill(Color.clear)
-                    )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(Color.secondary.opacity(0.25))
-                    )
 
                 if text.isEmpty {
                     Text(placeholder)
@@ -36,6 +41,18 @@ struct FeedbackMessageEditor: View {
                         .allowsHitTesting(false)
                 }
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(
+                RoundedRectangle(cornerRadius: FeedbackFormPresentationMetrics.controlCornerRadius, style: .continuous)
+                    .fill(FeedbackFormPresentationMetrics.controlSurfaceFill)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: FeedbackFormPresentationMetrics.controlCornerRadius, style: .continuous)
+                    .strokeBorder(
+                        FeedbackFormPresentationMetrics.controlBorderColor,
+                        lineWidth: FeedbackFormPresentationMetrics.controlBorderWidth
+                    )
+            )
         }
     }
 }

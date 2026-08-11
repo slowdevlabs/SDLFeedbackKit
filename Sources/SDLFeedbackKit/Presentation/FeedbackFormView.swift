@@ -56,6 +56,9 @@ private struct FeedbackFormContentView: View {
     @State private var activeAttachmentSelectionID: UUID?
     @Environment(\.locale) private var locale
     @Environment(\.sizeCategory) private var sizeCategory
+#if os(iOS)
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+#endif
 
     let configuration: FeedbackConfiguration
     let onSubmitted: ((FeedbackSubmissionResult) -> Void)?
@@ -70,9 +73,17 @@ private struct FeedbackFormContentView: View {
 
     var body: some View {
         let appliedSizeCategory = configuration.typographyPolicy.resolvedSizeCategory(from: sizeCategory)
+#if os(iOS)
+        let isRegularWidth = horizontalSizeClass == .regular
+#else
+        let isRegularWidth = false
+#endif
         VStack(spacing: 0) {
             ScrollView {
-                VStack(alignment: .leading, spacing: 24) {
+                VStack(
+                    alignment: .leading,
+                    spacing: FeedbackFormPresentationMetrics.contentSpacing(isRegularWidth: isRegularWidth)
+                ) {
                     Text(SDLFeedbackLocalizedStrings.title(locale: locale))
                         .font(.title.weight(.semibold))
 
@@ -134,8 +145,8 @@ private struct FeedbackFormContentView: View {
                 .frame(maxWidth: 640, alignment: .leading)
                 .frame(maxWidth: .infinity, alignment: .center)
                 .padding(.horizontal, 20)
-                .padding(.top, 24)
-                .padding(.bottom, 28)
+                .padding(.top, FeedbackFormPresentationMetrics.contentTopPadding(isRegularWidth: isRegularWidth))
+                .padding(.bottom, FeedbackFormPresentationMetrics.contentBottomPadding(isRegularWidth: isRegularWidth))
             }
 
             Divider()
@@ -270,6 +281,7 @@ private struct FeedbackFormActionBar: View {
         .padding(.horizontal, 20)
         .padding(.vertical, 14)
         .frame(maxWidth: .infinity)
+        .background(FeedbackFormPresentationMetrics.footerSurfaceFill)
     }
 }
 

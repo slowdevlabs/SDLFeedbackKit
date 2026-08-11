@@ -34,8 +34,22 @@ struct FeedbackEmailField: View {
             .accessibilityElement(children: .combine)
 
             TextField("", text: $text)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
+                .textFieldStyle(.plain)
                 .modifier(FeedbackEmailInputTraits())
+                .padding(.horizontal, 12)
+                .padding(.vertical, 10)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(
+                    RoundedRectangle(cornerRadius: FeedbackFormPresentationMetrics.controlCornerRadius, style: .continuous)
+                        .fill(FeedbackFormPresentationMetrics.controlSurfaceFill)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: FeedbackFormPresentationMetrics.controlCornerRadius, style: .continuous)
+                        .strokeBorder(
+                            FeedbackFormPresentationMetrics.controlBorderColor,
+                            lineWidth: FeedbackFormPresentationMetrics.controlBorderWidth
+                        )
+                )
 
             if let validationError {
                 Text(localizedMessage(for: validationError))
